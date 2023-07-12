@@ -1,4 +1,10 @@
+mod errors;
+mod instructions;
+mod state;
+
 use anchor_lang::prelude::*;
+
+use crate::instructions::*;
 
 declare_id!("CNPEe47uccxYFBZ86rvxNsEioZrga5hf3Z9sXdSFebRJ");
 
@@ -7,9 +13,6 @@ pub mod remi {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        Ok(())
+        ctx.accounts.app.initialize(ctx.accounts.mint.key())
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
