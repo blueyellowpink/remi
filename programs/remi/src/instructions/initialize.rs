@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
+use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::state::*;
 
@@ -8,10 +9,15 @@ pub struct Initialize<'info> {
     #[account(init, payer = signer, space = 8 + App::MAXIMUM_SIZE)]
     pub app: Account<'info, App>,
 
+    #[account(init, payer = signer, associated_token::mint = mint, associated_token::authority = app)]
+    pub ata: Account<'info, TokenAccount>,
+
     pub mint: Account<'info, Mint>,
 
     #[account(mut)]
     pub signer: Signer<'info>,
 
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }

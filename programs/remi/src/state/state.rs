@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct App {
-    mint: Pubkey, // 32
+    pub mint: Pubkey, // 32
 }
 
 impl App {
@@ -12,4 +12,12 @@ impl App {
         self.mint = mint;
         Ok(())
     }
+
+    // pub fn add_liquidity(&self, sol_amount: u64, mint_amount: u64) -> Result<()> {
+    //     let
+    //     let cpi_accounts = Transfer {
+    //         from:
+    //     }
+    //     Ok(())
+    // }
 }

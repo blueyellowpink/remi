@@ -1,10 +1,11 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program, AnchorError } from "@coral-xyz/anchor";
+import { Program, AnchorError, BN } from "@coral-xyz/anchor";
 import { Remi } from "../target/types/remi";
 import { expect } from "chai";
 import {
   createMint,
   createAssociatedTokenAccount,
+  getAssociatedTokenAddress,
   mintTo,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
@@ -18,12 +19,14 @@ describe("remi", () => {
 
   it("should fail while initializing app with a uninitialized mint", async () => {
     const appKeypair = anchor.web3.Keypair.generate();
+    const appAta = anchor.web3.Keypair.generate().publicKey;
     const mintPubkey = anchor.web3.Keypair.generate().publicKey;
     try {
       const tx = await program.methods
         .initialize()
         .accounts({
           app: appKeypair.publicKey,
+          ata: appAta,
           mint: mintPubkey,
           signer: wallet.publicKey,
         })
@@ -49,12 +52,19 @@ describe("remi", () => {
     );
   });
 
+  let appAta;
   it("should succeed while initializing app with a initialized mint", async () => {
     const appKeypair = anchor.web3.Keypair.generate();
+    appAta = await getAssociatedTokenAddress(
+      mintPubkey,
+      appKeypair.publicKey,
+      true
+    );
     const tx = await program.methods
       .initialize()
       .accounts({
         app: appKeypair.publicKey,
+        ata: appAta,
         mint: mintPubkey,
         signer: wallet.publicKey,
       })
@@ -63,5 +73,42 @@ describe("remi", () => {
 
     const app = await program.account.app.fetch(appKeypair.publicKey);
     expect(app.mint.toString()).to.equal(mintPubkey.toString());
+    // expect(app.ata.toString()).to.equal(appAta.toString());
+  });
+
+  it("should add liquidity", async () => {
+    const fromAta = await createAssociatedTokenAccount(
+      program.provider.connection,
+      wallet.payer,
+      mintPubkey,
+      wallet.publicKey
+    );
+    const mintAmount = new BN(1000);
+    const mintTx = await mintTo(
+      program.provider.connection,
+      wallet.payer,
+      mintPubkey,
+      fromAta,
+      wallet.publicKey,
+      mintAmount
+    );
+
+    const tx = await program.methods
+      .addLiquidity(new BN(1000), new BN(500))
+      .accounts({
+        // app: appKeypair.publicKey,
+        from: wallet.publicKey,
+        fromAta: fromAta,
+        toAta: appAta,
+      })
+      .rpc();
+
+    // const fromBalance = await program.provider.connection.getBalance(
+    //     wallet.publicKey
+    // );
+    // console.log(fromBalance);
+    const appAtaBalance =
+      await program.provider.connection.getTokenAccountBalance(appAta);
+    expect(appAtaBalance.value.amount).to.equal("500");
   });
 });
