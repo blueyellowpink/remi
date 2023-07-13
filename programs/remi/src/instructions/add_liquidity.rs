@@ -5,7 +5,9 @@ use crate::state::*;
 
 #[derive(Accounts)]
 pub struct AddLiquidity<'info> {
-    // pub app: Account<'info, App>,
+    #[account(mut)]
+    pub app: Account<'info, App>,
+
     #[account(mut)]
     pub from: Signer<'info>,
 

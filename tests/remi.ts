@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program, AnchorError, BN } from "@coral-xyz/anchor";
+import { Program, AnchorError, BN, web3 } from "@coral-xyz/anchor";
 import { Remi } from "../target/types/remi";
 import { expect } from "chai";
 import {
@@ -53,8 +53,9 @@ describe("remi", () => {
   });
 
   let appAta;
+  let appKeypair;
   it("should succeed while initializing app with a initialized mint", async () => {
-    const appKeypair = anchor.web3.Keypair.generate();
+    appKeypair = anchor.web3.Keypair.generate();
     appAta = await getAssociatedTokenAddress(
       mintPubkey,
       appKeypair.publicKey,
@@ -93,22 +94,25 @@ describe("remi", () => {
       mintAmount
     );
 
+    const solAmount = new BN(100 * web3.LAMPORTS_PER_SOL);
+    const tokenAmount = new BN(500);
     const tx = await program.methods
-      .addLiquidity(new BN(1000), new BN(500))
+      .addLiquidity(solAmount, tokenAmount)
       .accounts({
-        // app: appKeypair.publicKey,
+        app: appKeypair.publicKey,
         from: wallet.publicKey,
         fromAta: fromAta,
         toAta: appAta,
       })
       .rpc();
 
-    // const fromBalance = await program.provider.connection.getBalance(
-    //     wallet.publicKey
-    // );
-    // console.log(fromBalance);
     const appAtaBalance =
       await program.provider.connection.getTokenAccountBalance(appAta);
-    expect(appAtaBalance.value.amount).to.equal("500");
+    expect(appAtaBalance.value.amount).to.equal(tokenAmount.toString());
+
+    const appBalance = await program.provider.connection.getBalance(
+      appKeypair.publicKey
+    );
+    expect(appBalance).to.gt(100 * web3.LAMPORTS_PER_SOL);
   });
 });
