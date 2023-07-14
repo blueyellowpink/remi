@@ -68,9 +68,9 @@ describe("swap token for sol", () => {
       .addLiquidity(solAmount, tokenAmount)
       .accounts({
         app: appPda,
+        appAta: appAta,
         from: wallet.publicKey,
         fromAta: walletAta,
-        toAta: appAta,
       })
       .rpc();
     {

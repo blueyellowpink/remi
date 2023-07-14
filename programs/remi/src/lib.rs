@@ -30,14 +30,24 @@ pub mod remi {
         mint_amount: u64,
     ) -> Result<()> {
         let app = &ctx.accounts.app;
+        let app_ata = &ctx.accounts.app_ata;
         let from = &ctx.accounts.from;
         let from_ata = &ctx.accounts.from_ata;
-        let to_ata = &ctx.accounts.to_ata;
         let token_program = &ctx.accounts.token_program;
         let system_program = &ctx.accounts.system_program;
 
-        require_keys_eq!(to_ata.key(), app.ata, AppError::AppAtaAddressesDoNotMatch);
+        require_gte!(
+            from.lamports(),
+            sol_amount,
+            AppError::SenderInsufficientBalance
+        );
+        require_gte!(
+            from_ata.amount,
+            mint_amount,
+            AppError::SenderInsufficientBalance
+        );
 
+        // sends SOL to app
         let transfer_instruction =
             system_instruction::transfer(&from.key(), &app.key(), sol_amount);
         anchor_lang::solana_program::program::invoke_signed(
@@ -50,9 +60,10 @@ pub mod remi {
             &[],
         )?;
 
+        // sends token to app
         let cpi_accounts = Transfer {
             from: from_ata.to_account_info(),
-            to: to_ata.to_account_info(),
+            to: app_ata.to_account_info(),
             authority: from.to_account_info(),
         };
         let cpi_program = token_program.to_account_info();
