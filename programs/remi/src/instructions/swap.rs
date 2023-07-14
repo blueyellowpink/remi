@@ -5,7 +5,7 @@ use crate::state::*;
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
-    #[account(mut)]
+    #[account(mut, seeds = [b"appata".as_ref()], bump = app.bump)]
     pub app: Account<'info, App>,
 
     #[account(mut)]

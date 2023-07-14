@@ -73,7 +73,7 @@ pub mod remi {
         Ok(())
     }
 
-    pub fn swap_sol_for_token(ctx: Context<Swap>, token_amount: u64) -> Result<()> {
+    pub fn swap_sol_for_token(ctx: Context<Swap>, sol_amount: u64) -> Result<()> {
         let app = &ctx.accounts.app;
         let app_ata = &ctx.accounts.app_ata;
         let sender = &ctx.accounts.sender;
@@ -81,13 +81,13 @@ pub mod remi {
         let token_program = &ctx.accounts.token_program;
         let system_program = &ctx.accounts.system_program;
 
-        let sol_amount = token_amount / App::TOKEN_PER_SOL;
-        require_gt!(
+        require_gte!(
             sender.lamports(),
             sol_amount,
             AppError::SenderInsufficientBalance
         );
-        require_gt!(
+        let token_amount = sol_amount * App::TOKEN_PER_SOL;
+        require_gte!(
             app_ata.amount,
             token_amount,
             AppError::AppInsufficientBalance
@@ -131,13 +131,13 @@ pub mod remi {
         let sender_ata = &ctx.accounts.sender_ata;
         let token_program = &ctx.accounts.token_program;
 
-        require_gt!(
+        require_gte!(
             sender_ata.amount,
             token_amount,
             AppError::SenderInsufficientBalance
         );
         let sol_amount = token_amount / App::TOKEN_PER_SOL;
-        require_gt!(
+        require_gte!(
             app.to_account_info().lamports(),
             sol_amount,
             AppError::AppInsufficientBalance
