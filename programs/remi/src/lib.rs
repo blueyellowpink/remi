@@ -14,7 +14,6 @@ declare_id!("CNPEe47uccxYFBZ86rvxNsEioZrga5hf3Z9sXdSFebRJ");
 
 #[program]
 pub mod remi {
-
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
@@ -83,6 +82,7 @@ pub mod remi {
             AppError::AppInsufficientBalance
         );
 
+        // sender sends SOL to app
         let transfer_instruction =
             system_instruction::transfer(&sender.key(), &app.key(), sol_amount);
         anchor_lang::solana_program::program::invoke_signed(
@@ -95,6 +95,7 @@ pub mod remi {
             &[],
         )?;
 
+        // app sends TOKEN to sender
         let cpi_accounts = Transfer {
             from: app_ata.to_account_info(),
             to: sender_ata.to_account_info(),
@@ -106,9 +107,44 @@ pub mod remi {
         let seeds = vec![b"appata".as_ref(), seeds.as_slice()];
         let seeds = vec![seeds.as_slice()];
         let seeds = seeds.as_slice();
-
         let context = CpiContext::new_with_signer(cpi_program, cpi_accounts, seeds);
         token::transfer(context, token_amount)?;
+
+        Ok(())
+    }
+
+    pub fn swap_token_for_sol(ctx: Context<Swap>, token_amount: u64) -> Result<()> {
+        let app = &ctx.accounts.app;
+        let app_ata = &ctx.accounts.app_ata;
+        let sender = &ctx.accounts.sender;
+        let sender_ata = &ctx.accounts.sender_ata;
+        let token_program = &ctx.accounts.token_program;
+
+        require_gt!(
+            sender_ata.amount,
+            token_amount,
+            AppError::SenderInsufficientBalance
+        );
+        let sol_amount = token_amount / App::TOKEN_PER_SOL;
+        require_gt!(
+            app.to_account_info().lamports(),
+            sol_amount,
+            AppError::AppInsufficientBalance
+        );
+
+        // sender sends TOKEN to app
+        let cpi_accounts = Transfer {
+            from: sender_ata.to_account_info(),
+            to: app_ata.to_account_info(),
+            authority: sender.to_account_info(),
+        };
+        let cpi_program = token_program.to_account_info();
+        let context = CpiContext::new(cpi_program, cpi_accounts);
+        token::transfer(context, token_amount)?;
+
+        // app sends SOL to sender
+        **app.to_account_info().try_borrow_mut_lamports()? -= sol_amount;
+        **sender.to_account_info().try_borrow_mut_lamports()? += sol_amount;
 
         Ok(())
     }
