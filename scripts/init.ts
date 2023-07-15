@@ -9,14 +9,14 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
-import { getKeypair, setUp } from './utils'
+import { getKeypair, setUp, MINT_PUBKEY } from "./utils";
 
 const main = async () => {
-    const { program, appPda, appAta, wallet } = await setUp({
-        keypair: getKeypair('./deployer.json'),
-        network: 'local',
-        mintPubkey: MINT_PUBKEY,
-    })
+  const { program, appPda, appAta, wallet } = await setUp({
+    keypair: getKeypair("./deployer.json"),
+    network: "devnet",
+    mintPubkey: MINT_PUBKEY,
+  });
 
   const tx = await program.methods
     .initialize()
@@ -28,10 +28,10 @@ const main = async () => {
     })
     .rpc();
 
-    console.log(tx)
-    await program.provider.connection.confirmTransaction(tx)
-}
+  console.log(tx);
+  await program.provider.connection.confirmTransaction(tx);
+};
 
 main().then(() => {
-    console.log('done')
-})
+  console.log("done");
+});
