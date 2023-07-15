@@ -4,6 +4,13 @@
 - Mint token address: `2QxsXH2kMRtZMNbPYKaHvMUctGEoXUqKGALpxcLB3RJh`
 - Program address: `CNPEe47uccxYFBZ86rvxNsEioZrga5hf3Z9sXdSFebRJ`
 
+## Setup
+- Install `yarn`: https://yarnpkg.com/getting-started/install
+- Install dependencies
+```bash
+yarn
+```
+
 ## Example command
 ### Add Liquidity
 - `sol` is the amount of SOL and `token` is the amount of token to add to the pool
