@@ -6,7 +6,12 @@ node_modules
 test-ledger
 .yarn
 
-!target/types/*
-!target/deploy/remi-keypair.json
-!target/idl/*
-target
+# !target/types/*
+# !target/idl/*
+
+target/*
+!target/types
+!target/idl
+!target/deploy
+
+target/deploy/remi.so
