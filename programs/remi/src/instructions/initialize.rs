@@ -9,7 +9,7 @@ pub struct Initialize<'info> {
     #[account(init, payer = signer, space = 8 + App::MAXIMUM_SIZE, seeds = [b"appata".as_ref()], bump)]
     pub app: Account<'info, App>,
 
-    #[account(init, payer = signer, associated_token::mint = mint, associated_token::authority = app)]
+    #[account(init, payer = signer, associated_token::mint = mint, associated_token::authority = app, owner = token_program.key())]
     pub ata: Account<'info, TokenAccount>,
 
     pub mint: Account<'info, Mint>,
