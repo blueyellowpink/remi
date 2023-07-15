@@ -23,10 +23,19 @@ const main = async () => {
   if (!amount.sol || !amount.token) {
     throw new Error("invalid arguments");
   }
+  let keypairPath;
+  if (!process.argv[4]) {
+    keypairPath = "./user.json";
+  } else {
+    const [key, path] = process.argv[4].split("=");
+    if (key == "keypair") {
+      keypairPath = path;
+    }
+  }
 
   // add liquidity
   const { program, appPda, appAta, wallet } = await setUp({
-    keypair: getKeypair("./deployer.json"),
+    keypair: getKeypair(keypairPath),
     network: "devnet",
     mintPubkey: MINT_PUBKEY,
   });
@@ -40,17 +49,23 @@ const main = async () => {
 
   const solAmount = new BN(amount.sol * web3.LAMPORTS_PER_SOL);
   const tokenAmount = new BN(amount.token * web3.LAMPORTS_PER_SOL);
-  const tx = await program.methods
-    .addLiquidity(solAmount, tokenAmount)
-    .accounts({
-      app: appPda,
-      appAta: appAta,
-      from: wallet.publicKey,
-      fromAta: walletAta,
-    })
-    .rpc();
-  console.log(tx);
-  await program.provider.connection.confirmTransaction(tx);
+  try {
+    const tx = await program.methods
+      .addLiquidity(solAmount, tokenAmount)
+      .accounts({
+        app: appPda,
+        appAta: appAta,
+        from: wallet.publicKey,
+        fromAta: walletAta,
+      })
+      .rpc();
+    console.log(tx);
+    await program.provider.connection.confirmTransaction(tx);
+  } catch (e) {
+    const err: AnchorError = e;
+    console.log(err.error.errorCode.code);
+    process.exit(1);
+  }
 
   // check balance
   const solBalance = await program.provider.connection.getBalance(appPda);

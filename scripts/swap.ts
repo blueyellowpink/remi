@@ -11,14 +11,23 @@ const main = async () => {
     token: null,
   };
   const [key, value] = process.argv[2].split("=");
-  if ((key != "sol" && key != "token") || !value) {
+  if ((key != "sol" && key != "token") || !value || process.argv.length > 4) {
     throw new Error("invalid arguments");
   }
   amount[key] = parseFloat(value);
+  let keypairPath;
+  if (!process.argv[3]) {
+    keypairPath = "./user.json";
+  } else {
+    const [key, path] = process.argv[3].split("=");
+    if (key == "keypair") {
+      keypairPath = path;
+    }
+  }
 
   // swap
   const { program, appPda, appAta, wallet } = await setUp({
-    keypair: getKeypair("./user.json"),
+    keypair: getKeypair(keypairPath),
     network: "devnet",
     mintPubkey: MINT_PUBKEY,
   });

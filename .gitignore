@@ -1,8 +1,12 @@
 
 .anchor
 .DS_Store
-target
 **/*.rs.bk
 node_modules
 test-ledger
 .yarn
+
+!target/types/*
+!target/deploy/remi-keypair.json
+!target/idl/*
+target
