@@ -29,7 +29,6 @@ import {
 //         .initialize()
 //         .accounts({
 //           app: appPda,
-//           // appPda,
 //           ata: appAta,
 //           mint: mintPubkey,
 //           signer: wallet.publicKey,
