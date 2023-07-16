@@ -12,6 +12,13 @@ yarn
 ```
 
 ## Example command
+### Check balance
+- Check balance of swap program or user (default to swap program's balance if `keypair` is not provided)
+```bash
+anchor run balance # return swap program's balance
+anchor run balance -- keypair=./user.json # return user.json balance
+```
+
 ### Add Liquidity
 - `sol` is the amount of SOL and `token` is the amount of token to add to the pool
 - `keypair` is the path of keypair JSON file (default to `deployer.json` if `keypair` is not provided)

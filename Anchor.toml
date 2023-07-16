@@ -13,6 +13,8 @@ wallet = "deployer.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
 init = "yarn run ts-node --project ./tsconfig.json ./scripts/init.ts"
 add = "yarn run ts-node --project ./tsconfig.json ./scripts/addLiquid.ts"
 swap = "yarn run ts-node --project ./tsconfig.json ./scripts/swap.ts"
+balance = "yarn run ts-node --project ./tsconfig.json ./scripts/balance.ts"
