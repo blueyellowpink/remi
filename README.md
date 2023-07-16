@@ -10,6 +10,10 @@
 ```bash
 yarn
 ```
+## Test
+```bash
+anchor test
+```
 
 ## Example command
 ### Check balance
