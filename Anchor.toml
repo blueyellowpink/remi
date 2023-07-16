@@ -8,7 +8,7 @@ remi = "CNPEe47uccxYFBZ86rvxNsEioZrga5hf3Z9sXdSFebRJ"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "deployer.json"
 
 [scripts]

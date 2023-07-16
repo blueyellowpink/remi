@@ -10,9 +10,9 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
-describe("swap sol for token", () => {
+describe("remi", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+  anchor.setProvider(anchor.AnchorProvider.local());
 
   const program = anchor.workspace.Remi as Program<Remi>;
   const wallet = (program.provider as anchor.AnchorProvider).wallet;
@@ -49,7 +49,35 @@ describe("swap sol for token", () => {
       wallet.publicKey,
       mintAmount
     );
+  });
 
+  it("should fail while initializing app with a uninitialized mint", async () => {
+    const mintPubkey = web3.Keypair.generate().publicKey;
+    const [appPda, _] = web3.PublicKey.findProgramAddressSync(
+      [anchor.utils.bytes.utf8.encode("appata")],
+      program.programId
+    );
+    const appAta = await getAssociatedTokenAddress(mintPubkey, appPda, true);
+    try {
+      const tx = await program.methods
+        .initialize()
+        .accounts({
+          app: appPda,
+          ata: appAta,
+          mint: mintPubkey,
+          signer: wallet.publicKey,
+        })
+        .rpc();
+    } catch (e) {
+      expect(e).to.be.instanceOf(AnchorError);
+      const err: AnchorError = e;
+      expect(err.error.errorCode.code).to.equal("AccountNotInitialized");
+      expect(err.error.errorCode.number).to.equal(3012);
+      expect(err.program.equals(program.programId)).is.true;
+    }
+  });
+
+  it("should succeed while initializing app with a initialized mint", async () => {
     const tx = await program.methods
       .initialize()
       .accounts({
@@ -60,6 +88,12 @@ describe("swap sol for token", () => {
       })
       .rpc();
 
+    const app = await program.account.app.fetch(appPda);
+    expect(app.mint.toString()).to.equal(mintPubkey.toString());
+    expect(app.ata.toString()).to.equal(appAta.toString());
+  });
+
+  it("should add liquidity", async () => {
     const solAmount = new BN(500 * web3.LAMPORTS_PER_SOL);
     const tokenAmount = new BN(500 * web3.LAMPORTS_PER_SOL);
     await program.methods
@@ -74,6 +108,52 @@ describe("swap sol for token", () => {
     {
       const app = await program.account.app.fetch(appPda);
       expect(app.mint.toString()).to.equal(mintPubkey.toString());
+    }
+  });
+
+  it("should fail adding liquidity because of sender's insufficient SOL balance", async () => {
+    try {
+      const solAmount = new BN("1000000000000000000");
+      const tokenAmount = new BN(500 * web3.LAMPORTS_PER_SOL);
+      await program.methods
+        .addLiquidity(solAmount, tokenAmount)
+        .accounts({
+          app: appPda,
+          appAta: appAta,
+          from: wallet.publicKey,
+          fromAta: walletAta,
+        })
+        .rpc();
+      throw new Error("should fail");
+    } catch (e) {
+      expect(e).to.be.instanceOf(AnchorError);
+      const err: AnchorError = e;
+      expect(err.error.errorCode.code).to.equal("SenderInsufficientBalance");
+      expect(err.error.errorCode.number).to.equal(6001);
+      expect(err.program.equals(program.programId)).is.true;
+    }
+  });
+
+  it("should fail adding liquidity because of sender's insufficient token balance", async () => {
+    try {
+      const solAmount = new BN(500 * web3.LAMPORTS_PER_SOL);
+      const tokenAmount = new BN("1000000000000000000");
+      await program.methods
+        .addLiquidity(solAmount, tokenAmount)
+        .accounts({
+          app: appPda,
+          appAta: appAta,
+          from: wallet.publicKey,
+          fromAta: walletAta,
+        })
+        .rpc();
+      throw new Error("should fail");
+    } catch (e) {
+      expect(e).to.be.instanceOf(AnchorError);
+      const err: AnchorError = e;
+      expect(err.error.errorCode.code).to.equal("SenderInsufficientBalance");
+      expect(err.error.errorCode.number).to.equal(6001);
+      expect(err.program.equals(program.programId)).is.true;
     }
   });
 
